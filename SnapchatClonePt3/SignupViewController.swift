@@ -38,6 +38,21 @@ class SignupViewController: UIViewController, UITextFieldDelegate {
         guard let email = emailField.text else { return }
         guard let password = passwordField.text else { return }
         guard let name = nameField.text else { return }
+        FIRAuth.auth()?.createUser(withEmail: email, password: password) { (user, error) in
+            if let error = error {
+                print(error.localizedDescription)
+                return
+            }
+            else {
+                let changeRequest = user?.profileChangeRequest()
+                changeRequest?.displayName = name
+                changeRequest?.commitChanges() { (error) in
+                    self.performSegue(withIdentifier: "signupToMain", sender: nil)
+                }
+                
+            }
+
+        }
         
         // YOUR CODE HERE
     }

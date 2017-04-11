@@ -59,8 +59,14 @@ func addPost(postImage: UIImage, thread: String, username: String) {
     let dbRef = FIRDatabase.database().reference()
     let data = UIImageJPEGRepresentation(postImage, 1.0)! 
     let path = "\(firStorageImagesPath)/\(UUID().uuidString)"
+    let format = DateFormatter()
+    format.dateFormat = dateFormat
+    let date = format.string(from: Date())
+    let result = ["imagePath": path, "thread":thread, "username" : username, "date" : date]
+    let child = dbRef.child("Posts").childByAutoId()
+    child.setValue(result)
     
-    // YOUR CODE HERE
+    store(data: data, toPath: path)
 }
 
 /*
@@ -73,8 +79,11 @@ func addPost(postImage: UIImage, thread: String, username: String) {
 */
 func store(data: Data, toPath path: String) {
     let storageRef = FIRStorage.storage().reference()
-    
-    // YOUR CODE HERE
+    storageRef.child(path).put(data, metadata: nil) {(metadata, error) in
+        if let error = error {
+            print(error.localizedDescription)
+        }
+    }
 }
 
 
@@ -98,6 +107,16 @@ func store(data: Data, toPath path: String) {
 func getPosts(user: CurrentUser, completion: @escaping ([Post]?) -> Void) {
     let dbRef = FIRDatabase.database().reference()
     var postArray: [Post] = []
+    let posted = dbRef.observeSingleEvent(of: .value, with: { (snapshot) in
+        // Get user value
+        let value = snapshot.value as? [String:AnyObject]
+        for (_,val) in value! {
+            postArray.append(val as! String)
+        }
+        completion(postArray)
+    }) { (error) in
+        print(error.localizedDescription)
+    }
     
     // YOUR CODE HERE
 }
